@@ -1,0 +1,11 @@
+{
+  "name": "civicfix-aws-api",
+  "private": true,
+  "type": "module",
+  "scripts": { "build": "sam build", "deploy": "sam deploy --guided" },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.911.0",
+    "@aws-sdk/s3-request-presigner": "^3.911.0"
+  },
+  "devDependencies": { "@types/aws-lambda": "^8.10.152", "@types/node": "^24.7.2", "esbuild": "^0.25.10", "typescript": "^6.0.3" }
+}

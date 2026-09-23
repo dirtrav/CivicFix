@@ -6,8 +6,14 @@ node_modules/
 # Expo
 .expo/
 dist/
+aws/dist*/
 web-build/
 expo-env.d.ts
+
+# Local tooling and generated deployment artifacts
+.claude/
+.hallmark/
+aws/*.zip
 
 # Native
 .kotlin/
@@ -31,7 +37,9 @@ yarn-error.*
 *.pem
 
 # local env files
-.env*.local
+.env
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo

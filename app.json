@@ -1,11 +1,13 @@
 {
   "expo": {
     "name": "CivicFix",
-    "slug": "CivicFix",
+    "slug": "civicfix",
     "version": "1.0.0",
+    "scheme": "civicfix",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "description": "A public civic problem tracker for transparent reporting and resolution.",
     "ios": {
       "supportsTablet": true
     },
@@ -19,7 +21,14 @@
       "predictiveBackGestureEnabled": false
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/favicon.png",
+      "output": "static"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-router",
+      ["expo-location", { "locationWhenInUsePermission": "Allow CivicFix to locate a report and show issues near you." }],
+      ["expo-image-picker", { "photosPermission": "Allow CivicFix to attach a photo to your civic report.", "cameraPermission": "Allow CivicFix to take a photo of a civic problem.", "microphonePermission": false }]
+    ]
   }
 }

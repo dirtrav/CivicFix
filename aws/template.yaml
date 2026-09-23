@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: CivicFix private issue photo uploads.
+
+Parameters:
+  SupabaseUrl:
+    Type: String
+  SupabaseAnonKey:
+    Type: String
+    NoEcho: true
+
+Resources:
+  IssueUploads:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption: { ServerSideEncryptionConfiguration: [{ ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 } }] }
+      PublicAccessBlockConfiguration: { BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true }
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [PUT, GET, HEAD]
+            AllowedOrigins: ['*']
+            ExposedHeaders: [ETag]
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload: { DaysAfterInitiation: 1 }
+  UploadApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration: { AllowOrigins: ['*'], AllowHeaders: ['authorization', 'content-type'], AllowMethods: [POST, OPTIONS] }
+  UploadFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: true
+        EntryPoints:
+          - src/index.ts
+    Properties:
+      Runtime: nodejs22.x
+      CodeUri: .
+      Handler: src/index.handler
+      MemorySize: 256
+      Timeout: 15
+      Events:
+        Presign: { Type: HttpApi, Properties: { ApiId: !Ref UploadApi, Path: /uploads/presign, Method: POST } }
+        Complete: { Type: HttpApi, Properties: { ApiId: !Ref UploadApi, Path: /uploads/complete, Method: POST } }
+        View: { Type: HttpApi, Properties: { ApiId: !Ref UploadApi, Path: /uploads/view, Method: POST } }
+        DeleteIssue: { Type: HttpApi, Properties: { ApiId: !Ref UploadApi, Path: /issues/delete, Method: POST } }
+      Environment:
+        Variables:
+          UPLOADS_BUCKET: !Ref IssueUploads
+          SUPABASE_URL: !Ref SupabaseUrl
+          SUPABASE_ANON_KEY: !Ref SupabaseAnonKey
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: [s3:PutObject, s3:GetObject]
+              Resource: !Sub '${IssueUploads.Arn}/*'
+            - Effect: Allow
+              Action: [s3:ListBucketVersions]
+              Resource: !GetAtt IssueUploads.Arn
+            - Effect: Allow
+              Action: [s3:DeleteObjectVersion]
+              Resource: !Sub '${IssueUploads.Arn}/*'
+
+Outputs:
+  UploadApiUrl:
+    Value: !Sub 'https://${UploadApi}.execute-api.${AWS::Region}.amazonaws.com'
+  UploadsBucketName:
+    Value: !Ref IssueUploads
