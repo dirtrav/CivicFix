@@ -1,0 +1,37 @@
+{
+  "id": "/",
+  "name": "CivicFix — Public Problem Tracker",
+  "short_name": "CivicFix",
+  "description": "Report civic problems, follow their progress, and see what is being fixed around you.",
+  "lang": "en-IN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#17694E",
+  "background_color": "#F7F8F4",
+  "categories": ["utilities", "government"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/civicfix-icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Report an issue",
+      "short_name": "Report",
+      "url": "/report",
+      "icons": [{ "src": "/civicfix-icon.png", "sizes": "1024x1024" }]
+    },
+    {
+      "name": "Explore reports",
+      "short_name": "Explore",
+      "url": "/explore",
+      "icons": [{ "src": "/civicfix-icon.png", "sizes": "1024x1024" }]
+    }
+  ]
+}
