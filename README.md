@@ -1,75 +1,70 @@
 # CivicFix
 
-CivicFix is a mobile-first civic problem tracker for reporting public issues, following progress, and giving departments a clear work queue.
+CivicFix is a mobile-first app for reporting local civic problems, tracking their progress, and helping departments manage their work queue.
 
-## How it works
+## How the app works
 
-1. A resident browses civic categories, signs in, and submits a report with a title, description, address, map location, and optional photo.
-2. Supabase stores the report, assigns it to the matching department, creates its public reference, and records its history.
-3. Residents can explore public reports on a map, open report details, view status updates, and track their own submissions.
-4. Staff see reports assigned to their department and publish progress updates. Admins can manage all reports and delete reports with their attachments.
+1. A citizen creates an account and reports an issue with a category, description, location, and optional photo.
+2. The report is stored in Supabase and assigned to the relevant department.
+3. If a photo is included, the app requests a secure upload link and saves the photo privately in AWS S3.
+4. Citizens can follow report status updates, while staff can update, resolve, or delete assigned reports.
 
-## Main features
+## AWS services used
 
-- Email/password sign-up, login, password reset, and deep-link callbacks.
-- Public issue feed, category filtering, map exploration, issue detail pages, and progress timelines.
-- Location capture with Expo Location and photo capture/selection with Expo ImagePicker.
-- Private photo storage in Amazon S3 using short-lived presigned URLs.
-- Role-based citizen, staff, and admin workspaces.
-- Row Level Security and database functions enforce access rules in Supabase.
-- Responsive Expo web app, installable as a free PWA from the browser.
-- Android and iOS compatible Expo/React Native app.
+### AWS CloudFormation
 
-## Stack
+CloudFormation deploys and manages the CivicFix AWS resources.
 
-| Layer | Technology |
-| --- | --- |
-| App | Expo SDK 57, React Native, TypeScript, Expo Router |
-| Web/PWA | React Native Web, static Expo export, Workbox service worker |
-| UI | Inter, Space Grotesk, Expo Vector Icons |
-| Data/auth | Supabase Postgres, Auth, RLS, SQL migrations |
-| Maps | Leaflet with OpenStreetMap tiles |
-| Uploads | AWS API Gateway, Lambda, S3, presigned URLs |
-| Hosting | Vercel for the web/PWA |
+![AWS CloudFormation](images/CloudFormation.png)
 
-## Repository structure
+### Amazon API Gateway
 
-- `src/app/` — Expo Router screens and navigation.
-- `src/` — shared UI, auth, session, Supabase, AWS, map, and issue logic.
-- `supabase/migrations/` — database schema, policies, triggers, and security functions.
-- `aws/` — the private photo-upload API and SAM deployment files.
-- `public/` — PWA manifest and install icon.
-- `workbox-config.js` — production service-worker caching rules.
+API Gateway exposes secure HTTP endpoints for photo upload, completion, viewing, and deletion.
 
-## Local development
+![Amazon API Gateway](images/APIGateway.png)
 
-```powershell
-npm install
-Copy-Item .env.example .env
-npm run web
+### AWS Lambda
+
+Lambda validates requests, creates short-lived S3 presigned URLs, and handles photo-related API operations.
+
+![AWS Lambda](images/Lambda.png)
+
+![AWS Lambda code](images/LambdaCode.png)
+
+### Amazon S3
+
+S3 stores civic issue photos privately. A separate S3 bucket hosts the public web build.
+
+![Private Amazon S3 uploads bucket](images/S3.png)
+
+![Amazon S3 website bucket](images/S3-website.png)
+
+### AWS IAM
+
+IAM provides the Lambda execution role and only the S3 permissions required for uploads and photo management.
+
+![AWS IAM](images/IAM.png)
+
+## App demo
+
+1. Open CivicFix and create an account or sign in.
+2. Tap **Report** and select an issue category.
+3. Enter the problem details and location, then optionally add a photo.
+4. Submit the report and note the generated reference number.
+5. Open **My Reports** to track the status and updates.
+6. Sign in as staff to open the department workspace and update the report status.
+
+## Flow chart
+
+```mermaid
+flowchart TD
+    A[Citizen opens CivicFix] --> B[Create or sign in to account]
+    B --> C[Submit issue details, location and optional photo]
+    C --> D[Supabase stores report and assigns department]
+    C --> E[API Gateway]
+    E --> F[Lambda validates request]
+    F --> G[Private S3 photo storage]
+    D --> H[Citizen tracks report status]
+    D --> I[Staff updates or resolves report]
+    I --> H
 ```
-
-Set these values in `.env`:
-
-```text
-EXPO_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=<publishable-or-anon-key>
-EXPO_PUBLIC_AWS_API_URL=https://<api-id>.execute-api.<region>.amazonaws.com
-```
-
-Apply the SQL files in `supabase/migrations/` in order. See [SUPABASE_SETUP.md](SUPABASE_SETUP.md) for authentication, roles, and redirect URLs.
-
-Useful commands:
-
-```powershell
-npm run web
-npm run build:web
-npx expo lint
-npx tsc --noEmit
-```
-
-## Deployment
-
-Connect the repository to Vercel. The configured build command exports the static web app and generates the Workbox service worker. Add the three `EXPO_PUBLIC_*` variables to the Vercel Production environment, then attach `civicfix.dhrusti.xyz` as the custom domain.
-
-The web app can be installed from Chrome on Android or Safari on iPhone using **Add to Home Screen**. No app-store publication is required.

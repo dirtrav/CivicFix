@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Public S3 static website hosting for the CivicFix Expo web export.
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: ''
+    Description: Optional globally unique S3 bucket name. Leave blank to let CloudFormation generate one.
+
+Conditions:
+  HasBucketName: !Not [!Equals [!Ref BucketName, '']]
+
+Resources:
+  WebBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If [HasBucketName, !Ref BucketName, !Ref AWS::NoValue]
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: false
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: false
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: index.html
+      Tags:
+        - Key: Application
+          Value: CivicFix
+        - Key: Purpose
+          Value: PublicStaticWebsite
+
+  WebBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadOnly
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub '${WebBucket.Arn}/*'
+
+Outputs:
+  BucketName:
+    Value: !Ref WebBucket
+  WebsiteURL:
+    Value: !GetAtt WebBucket.WebsiteURL
